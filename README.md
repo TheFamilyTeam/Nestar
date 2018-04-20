@@ -22,7 +22,7 @@ def handle(bot, update):
 	print(update)
 
 bot = nestar.Nestar("YOUR:TOKEN")
-bot.getUpdates()
+bot.getUpdates(handle)
 ```
 
 
