@@ -38,14 +38,14 @@ class Nestar:
 		self.config['token'] = token
 		self.config['pluginHandler'].loadPlugins()
 
-	def apiRequest(self, method, **params):
+	def apiRequest(self, method, params):
 		data = requests.post('{}/bot{}/{}'.format(self.config['endpoint'], self.config['token'], method), data=params).json()
 		if data["ok"] == False:	raise TelegramExecption({"error_code":data["error_code"], "description":data["description"]})
 		return data
 	
-	def getUpdates(self, callback=0):
+	def loop(self, callback=0):
 		while 1:
-			r = self.apiRequest('getUpdates', offset=self.offset, timeout=10)
+			r = self.getUpdates(offset=self.offset, timeout=10)
 			for update in r["result"]:
 				if "update_id" in update:
 					self.offset = update["update_id"] + 1
@@ -59,3 +59,8 @@ class Nestar:
 								plugin.NestarPlugin().handle(self, update)
 							else:
 								raise NestarException('Invalid plugin "{}"'.format(plugin))
+
+	def __getattr__(self, method):
+		def function(**kwargs):
+			return self.apiRequest(method, kwargs)
+		return function
