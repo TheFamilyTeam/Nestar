@@ -26,17 +26,17 @@ class NestarException(Exception):
 class Nestar:
 	config = {
 		'token':None,
-		'endpoint':'https://api.telegram.org',
 		'pluginHandler':PluginHandler(),
 	}
 
 	offset = None
 
-	def __init__(self, token):
+	def __init__(self, token, endpoint='https://api.telegram.org'):
 		if sys.version_info[0] < 3:
 			reload(sys)
 			sys.setdefaultencoding("utf-8")
 		self.config['token'] = token
+		self.config['endpoint'] = endpoint
 		self.config['pluginHandler'].loadPlugins()
 
 	def apiRequest(self, method, params):
