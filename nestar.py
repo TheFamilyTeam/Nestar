@@ -1,6 +1,7 @@
 import importlib
 import requests
 import glob
+import json
 import sys
 import os
 
@@ -41,12 +42,12 @@ class Nestar:
 	def apiRequest(self, method, params):
 		data = requests.post('{}/bot{}/{}'.format(self.config['endpoint'], self.config['token'], method), data=params).json()
 		if data["ok"] == False:	raise TelegramExecption({"error_code":data["error_code"], "description":data["description"]})
-		return data
+		return data["result"]
 	
 	def loop(self, callback=0):
 		while 1:
 			r = self.getUpdates(offset=self.offset, timeout=10)
-			for update in r["result"]:
+			for update in r:
 				if "update_id" in update:
 					self.offset = update["update_id"] + 1
 					if callback == 0 and self.config['pluginHandler'].loaded == []:
@@ -62,5 +63,9 @@ class Nestar:
 
 	def __getattr__(self, method):
 		def function(**kwargs):
+			if 'reply_markup' in kwargs:	kwargs['reply_markup'] = json.dumps(kwargs['reply_markup'])
+			if 'results' in kwargs:	kwargs['results'] = json.dumps(kwargs['results'])
+			if 'mask_position' in kwargs:	kwargs['mask_position'] = json.dumps(kwargs['mask_position'])
+			if 'shipping_options' in kwargs:	kwargs['shipping_options'] = json.dumps(kwargs['shipping_options'])
 			return self.apiRequest(method, kwargs)
 		return function
