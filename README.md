@@ -33,4 +33,27 @@ class NestarPlugin:
 		bot.sendMessage(chat_id=update["message"]["from"]["id"], text="Hi! Welcome to Nestar, {}".format(update["message"]["from"]["first_name"]))
 ```
 
+_PHP Handler Sample_
+```python
+import nestar
+
+bot = nestar.Nestar("YOUR:TOKEN")
+bot.loop(php_handler="nestar.php")
+```
+
+```php
+<?php
+$update = json_decode($argv[1], true);
+
+function apiRequest($method, $params){
+        echo("nestarAnswer".json_encode(["method" => $method, "params" => $params]));
+}
+
+if($update["message"]["text"] == "/start"){
+        apiRequest("sendMessage", ["chat_id" => $update["message"]["chat"]["id"], "text" => "hello"]);
+}
+```
+
+_Notes_
+
 You won't need an handler if there is at least one plugin in the _plugins_ folder.
