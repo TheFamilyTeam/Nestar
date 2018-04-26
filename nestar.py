@@ -1,3 +1,4 @@
+import subprocess
 import importlib
 import requests
 import glob
@@ -44,22 +45,31 @@ class Nestar:
 		if data["ok"] == False:	raise TelegramExecption({"error_code":data["error_code"], "description":data["description"]})
 		return data["result"]
 	
-	def loop(self, callback=0):
+	def loop(self, callback=0, php_handler=0):
 		while 1:
 			r = self.getUpdates(offset=self.offset, timeout=10)
 			for update in r:
 				if "update_id" in update:
 					self.offset = update["update_id"] + 1
-					if callback == 0 and self.config['pluginHandler'].loaded == []:
+					
+					if callback == 0 and self.config['pluginHandler'].loaded == [] and php_handler == 0:
 						raise NestarException('No handler found')
-					if callback != 0:
-						callback(self, update)
-					if self.config['pluginHandler'].loaded != []:
-						for plugin in self.config['pluginHandler'].loaded:
-							if 'NestarPlugin' in dir(plugin):
-								plugin.NestarPlugin().handle(self, update)
-							else:
-								raise NestarException('Invalid plugin "{}"'.format(plugin))
+					
+					if php_handler == 0:
+						if callback != 0:
+							callback(self, update)
+						if self.config['pluginHandler'].loaded != []:
+							for plugin in self.config['pluginHandler'].loaded:
+								if 'NestarPlugin' in dir(plugin):
+									plugin.NestarPlugin().handle(self, update)
+								else:
+									raise NestarException('Invalid plugin "{}"'.format(plugin))
+					else:
+						data = str(subprocess.check_output(["php", php_handler, json.dumps(update)]))[2:][:-1]
+						
+						if data.startswith('nestarAnswer'):
+							data = json.loads(data[12:])
+							self.apiRequest(data["method"], data["params"])
 
 	def __getattr__(self, method):
 		def function(**kwargs):
